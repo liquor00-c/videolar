@@ -24,7 +24,6 @@ button {padding:5px 10px; border-radius:5px; border:none; cursor:pointer;}
 .subtask span.tick {margin-left:5px; color:green; display:none;}
 .subtask button {margin-left:5px; padding:3px 5px; border-radius:5px;}
 .done {background:#4CAF50; color:white;}
-.fail {background:#e74c3c; color:white;}
 .add-sub {margin-top:5px;}
 </style>
 </head>
@@ -121,16 +120,14 @@ function renderTasks() {
       subDiv.innerHTML=`<span>${sub.text}</span><span class="tick">✔</span>
         <div>
           <button class="done">✅</button>
-          <button class="fail">❌</button>
         </div>`;
       const tickSpan=subDiv.querySelector(".tick");
       if(sub.status==="done") tickSpan.style.display="inline";
 
       subDiv.querySelector(".done").onclick=e=>{
-        e.stopPropagation(); sub.status=sub.status==="done"?"":"done"; saveTasks(); renderTasks();
-      }
-      subDiv.querySelector(".fail").onclick=e=>{
-        e.stopPropagation(); sub.status=sub.status==="fail"?"":"fail"; saveTasks(); renderTasks();
+        e.stopPropagation(); 
+        sub.status=sub.status==="done"?"":"done"; 
+        saveTasks(); renderTasks();
       }
 
       subtasksDiv.appendChild(subDiv);
@@ -141,16 +138,14 @@ function renderTasks() {
     subInput.placeholder="Alt görev ekle...";
     subInput.className="add-sub";
     subInput.onclick=e=>e.stopPropagation();
+    subInput.addEventListener("keydown", function(e){
+      if(e.key==="Enter"){ addSubtask(task,index,subInput.value); subInput.value=""; }
+    });
+
     const subBtn=document.createElement("button");
     subBtn.innerText="Ekle";
-    subBtn.onclick=e=>{
-      e.stopPropagation();
-      if(!subInput.value) return;
-      task.subtasks.push({text:subInput.value,status:""});
-      task.show=true;
-      saveTasks(); renderTasks();
-      subInput.value="";
-    };
+    subBtn.onclick=e=>{ addSubtask(task,index,subInput.value); subInput.value=""; };
+
     subtasksDiv.appendChild(subInput);
     subtasksDiv.appendChild(subBtn);
     taskDiv.appendChild(subtasksDiv);
@@ -173,6 +168,14 @@ function addTask() {
   saveTasks();
   renderTasks();
   document.getElementById("taskInput").value="";
+}
+
+function addSubtask(task,index,text){
+  if(!text) return;
+  task.subtasks.push({text:text,status:""});
+  task.show=true;
+  saveTasks();
+  renderTasks();
 }
 </script>
 
