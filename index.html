@@ -4,94 +4,112 @@
   <meta charset="UTF-8">
   <title>Görev Listesi</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
-      padding: 20px;
-    }
-    .task {
-      background: white;
-      padding: 15px;
-      margin-bottom: 15px;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    .subtask {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 5px 0;
-      border-bottom: 1px solid #eee;
-    }
-    .subtask:last-child {
-      border-bottom: none;
-    }
-    .buttons button {
-      margin-left: 5px;
-      padding: 5px 10px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    .done {
-      background: #4CAF50;
-      color: white;
-    }
-    .fail {
-      background: #e74c3c;
-      color: white;
-    }
+    body { font-family: Arial; padding: 20px; background: #f4f4f4; }
+    h2 { margin-bottom: 10px; }
+    .task { background: white; padding: 15px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .subtasks { margin-left: 20px; margin-top: 10px; }
+    .subtask { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #eee; }
+    .subtask:last-child { border-bottom: none; }
+    .buttons button { margin-left: 5px; padding: 5px 10px; border: none; border-radius: 5px; cursor: pointer; }
+    .done { background: #4CAF50; color: white; }
+    .fail { background: #e74c3c; color: white; }
+    .add-sub { margin-top: 5px; }
+    input[type="text"] { padding: 5px; border-radius: 5px; border: 1px solid #ccc; width: 200px; }
+    button { cursor: pointer; }
   </style>
 </head>
 <body>
 
-  <h2>Görev Ekle</h2>
-  <input type="text" id="taskInput" placeholder="Görev başlığı">
-  <button onclick="addTask()">Ekle</button>
+<h2>Görev Ekle</h2>
+<input type="text" id="taskInput" placeholder="Görev başlığı">
+<button onclick="addTask()">Ekle</button>
 
-  <div id="taskList"></div>
+<div id="taskList"></div>
 
-  <script>
-    function addTask() {
-      const taskText = document.getElementById("taskInput").value;
-      if (!taskText) return;
+<script>
+let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
 
-      const taskDiv = document.createElement("div");
-      taskDiv.className = "task";
+function saveTasks() {
+  localStorage.setItem('tasks', JSON.stringify(tasks));
+}
 
-      const title = document.createElement("h3");
-      title.innerText = taskText;
+function renderTasks() {
+  const taskList = document.getElementById("taskList");
+  taskList.innerHTML = "";
+  tasks.forEach((task, tIndex) => {
+    const taskDiv = document.createElement("div");
+    taskDiv.className = "task";
 
-      const subInput = document.createElement("input");
-      subInput.type = "text";
-      subInput.placeholder = "Alt görev ekle...";
+    const title = document.createElement("h3");
+    title.innerText = task.title;
 
-      const subBtn = document.createElement("button");
-      subBtn.innerText = "Ekle";
-      subBtn.onclick = function() {
-        if (!subInput.value) return;
+    const subtasksDiv = document.createElement("div");
+    subtasksDiv.className = "subtasks";
 
-        const subDiv = document.createElement("div");
-        subDiv.className = "subtask";
-        subDiv.innerHTML = `
-          <span>${subInput.value}</span>
-          <div class="buttons">
-            <button class="done">✅</button>
-            <button class="fail">❌</button>
-          </div>
-        `;
-        taskDiv.appendChild(subDiv);
-        subInput.value = "";
+    task.subtasks.forEach((sub, sIndex) => {
+      const subDiv = document.createElement("div");
+      subDiv.className = "subtask";
+      subDiv.innerHTML = `
+        <span>${sub.text}</span>
+        <div class="buttons">
+          <button class="done">✅</button>
+          <button class="fail">❌</button>
+        </div>
+      `;
+      // Durumları uygula
+      if(sub.status === "done") subDiv.querySelector(".done").style.opacity = 0.6;
+      if(sub.status === "fail") subDiv.querySelector(".fail").style.opacity = 0.6;
+
+      // Buton olayları
+      subDiv.querySelector(".done").onclick = () => {
+        sub.status = sub.status === "done" ? "" : "done";
+        saveTasks();
+        renderTasks();
+      };
+      subDiv.querySelector(".fail").onclick = () => {
+        sub.status = sub.status === "fail" ? "" : "fail";
+        saveTasks();
+        renderTasks();
       };
 
-      taskDiv.appendChild(title);
-      taskDiv.appendChild(subInput);
-      taskDiv.appendChild(subBtn);
+      subtasksDiv.appendChild(subDiv);
+    });
 
-      document.getElementById("taskList").appendChild(taskDiv);
-      document.getElementById("taskInput").value = "";
-    }
-  </script>
+    const subInput = document.createElement("input");
+    subInput.type = "text";
+    subInput.placeholder = "Alt görev ekle...";
+    subInput.className = "add-sub";
+
+    const subBtn = document.createElement("button");
+    subBtn.innerText = "Ekle";
+    subBtn.onclick = function() {
+      if(!subInput.value) return;
+      task.subtasks.push({text: subInput.value, status: ""});
+      saveTasks();
+      renderTasks();
+      subInput.value = "";
+    };
+
+    taskDiv.appendChild(title);
+    taskDiv.appendChild(subInput);
+    taskDiv.appendChild(subBtn);
+    taskDiv.appendChild(subtasksDiv);
+
+    taskList.appendChild(taskDiv);
+  });
+}
+
+function addTask() {
+  const taskText = document.getElementById("taskInput").value;
+  if (!taskText) return;
+  tasks.push({title: taskText, subtasks: []});
+  saveTasks();
+  renderTasks();
+  document.getElementById("taskInput").value = "";
+}
+
+renderTasks();
+</script>
 
 </body>
 </html>
