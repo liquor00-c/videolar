@@ -13,11 +13,13 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      flex-direction: column;
     }
 
     #userSelect {
       display: flex;
       gap: 50px;
+      margin-bottom: 20px;
     }
 
     .userCard {
@@ -34,6 +36,7 @@
       cursor: pointer;
       box-shadow: 0 5px 15px rgba(0,0,0,0.3);
       transition: transform 0.3s, box-shadow 0.3s;
+      text-align: center;
     }
 
     .userCard:hover {
@@ -45,23 +48,71 @@
       display: none;
       flex-direction: column;
       align-items: flex-start;
-      width: 600px;
-      background: white;
-      padding: 20px;
-      border-radius: 15px;
-      box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+      width: 90%;
+      max-width: 900px;
     }
 
-    .task { background: #f9f9f9; padding: 15px; margin-bottom: 15px; border-radius: 8px; }
-    .subtasks { margin-left: 20px; margin-top: 10px; }
-    .subtask { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #eee; }
-    .subtask:last-child { border-bottom: none; }
-    .buttons button { margin-left: 5px; padding: 5px 10px; border: none; border-radius: 5px; cursor: pointer; }
+    #tasksWrapper {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    .task {
+      background: #f9f9f9;
+      padding: 15px;
+      border-radius: 8px;
+      width: 200px;
+      cursor: pointer;
+      text-transform: uppercase;
+      position: relative;
+    }
+
+    .task h3 {
+      margin: 0;
+      display: inline-block;
+    }
+
+    .task .task-check {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      font-size: 18px;
+      color: green;
+      display: none;
+    }
+
+    .subtasks {
+      margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .subtask { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      padding: 5px; 
+      background: #e2e2e2; 
+      border-radius: 5px; 
+    }
+
+    .buttons button { 
+      margin-left: 5px; 
+      padding: 3px 8px; 
+      border: none; 
+      border-radius: 5px; 
+      cursor: pointer; 
+    }
+
     .done { background: #4CAF50; color: white; }
     .fail { background: #e74c3c; color: white; }
+
     .add-sub { margin-top: 5px; }
-    input[type="text"] { padding: 5px; border-radius: 5px; border: 1px solid #ccc; width: 200px; }
-    button { cursor: pointer; }
+    input[type="text"] { padding: 5px; border-radius: 5px; border: 1px solid #ccc; width: 100%; box-sizing: border-box; }
+    button { cursor: pointer; margin-top: 5px; }
   </style>
 </head>
 <body>
@@ -75,7 +126,7 @@
   <h2 id="userTitle"></h2>
   <input type="text" id="taskInput" placeholder="Görev başlığı">
   <button onclick="addTask()">Ekle</button>
-  <div id="taskList"></div>
+  <div id="tasksWrapper"></div>
 </div>
 
 <script>
@@ -106,18 +157,30 @@ function setCurrentTasks(newTasks) {
 }
 
 function renderTasks() {
-  const taskList = document.getElementById("taskList");
-  taskList.innerHTML = "";
+  const wrapper = document.getElementById("tasksWrapper");
+  wrapper.innerHTML = "";
   let tasks = getCurrentTasks();
+
   tasks.forEach((task) => {
     const taskDiv = document.createElement("div");
     taskDiv.className = "task";
 
     const title = document.createElement("h3");
     title.innerText = task.title;
+    taskDiv.appendChild(title);
+
+    // Tik işareti
+    const checkSpan = document.createElement("span");
+    checkSpan.className = "task-check";
+    if(task.subtasks.some(s => s.status === "done")) {
+      checkSpan.style.display = "inline";
+      checkSpan.innerText = "✔";
+    }
+    taskDiv.appendChild(checkSpan);
 
     const subtasksDiv = document.createElement("div");
     subtasksDiv.className = "subtasks";
+    subtasksDiv.style.display = task.show ? "flex" : "none";
 
     task.subtasks.forEach((sub) => {
       const subDiv = document.createElement("div");
@@ -132,12 +195,14 @@ function renderTasks() {
       if(sub.status === "done") subDiv.querySelector(".done").style.opacity = 0.6;
       if(sub.status === "fail") subDiv.querySelector(".fail").style.opacity = 0.6;
 
-      subDiv.querySelector(".done").onclick = () => {
+      subDiv.querySelector(".done").onclick = (e) => {
+        e.stopPropagation();
         sub.status = sub.status === "done" ? "" : "done";
         saveTasks();
         renderTasks();
       };
-      subDiv.querySelector(".fail").onclick = () => {
+      subDiv.querySelector(".fail").onclick = (e) => {
+        e.stopPropagation();
         sub.status = sub.status === "fail" ? "" : "fail";
         saveTasks();
         renderTasks();
@@ -146,6 +211,7 @@ function renderTasks() {
       subtasksDiv.appendChild(subDiv);
     });
 
+    // Alt görev ekleme
     const subInput = document.createElement("input");
     subInput.type = "text";
     subInput.placeholder = "Alt görev ekle...";
@@ -153,28 +219,39 @@ function renderTasks() {
 
     const subBtn = document.createElement("button");
     subBtn.innerText = "Ekle";
-    subBtn.onclick = function() {
+    subBtn.onclick = (e) => {
+      e.stopPropagation();
       if(!subInput.value) return;
       task.subtasks.push({text: subInput.value, status: ""});
       saveTasks();
       renderTasks();
       subInput.value = "";
+      task.show = true;
     };
 
-    taskDiv.appendChild(title);
-    taskDiv.appendChild(subInput);
-    taskDiv.appendChild(subBtn);
+    subtasksDiv.appendChild(subInput);
+    subtasksDiv.appendChild(subBtn);
+
     taskDiv.appendChild(subtasksDiv);
 
-    taskList.appendChild(taskDiv);
+    // Ana göreve tıklayınca alt görevleri aç/kapa
+    taskDiv.onclick = () => {
+      task.show = !task.show;
+      renderTasks();
+    };
+
+    wrapper.appendChild(taskDiv);
   });
+
+  setCurrentTasks(tasks);
+  saveTasks();
 }
 
 function addTask() {
   const taskText = document.getElementById("taskInput").value;
   if (!taskText) return;
   let tasks = getCurrentTasks();
-  tasks.push({title: taskText, subtasks: []});
+  tasks.push({title: taskText, subtasks: [], show: true});
   setCurrentTasks(tasks);
   saveTasks();
   renderTasks();
