@@ -24,6 +24,7 @@ button {padding:5px 10px; border-radius:5px; border:none; cursor:pointer;}
 .subtask span.tick {margin-left:5px; color:green; display:none;}
 .subtask button {margin-left:5px; padding:3px 5px; border-radius:5px;}
 .done {background:#4CAF50; color:white;}
+.delete-sub {background:#e74c3c; color:white;}
 .add-sub {margin-top:5px;}
 </style>
 </head>
@@ -120,6 +121,7 @@ function renderTasks() {
       subDiv.innerHTML=`<span>${sub.text}</span><span class="tick">✔</span>
         <div>
           <button class="done">✅</button>
+          <button class="delete-sub">🗑</button>
         </div>`;
       const tickSpan=subDiv.querySelector(".tick");
       if(sub.status==="done") tickSpan.style.display="inline";
@@ -127,6 +129,12 @@ function renderTasks() {
       subDiv.querySelector(".done").onclick=e=>{
         e.stopPropagation(); 
         sub.status=sub.status==="done"?"":"done"; 
+        saveTasks(); renderTasks();
+      }
+
+      subDiv.querySelector(".delete-sub").onclick=e=>{
+        e.stopPropagation();
+        task.subtasks.splice(subIndex,1);
         saveTasks(); renderTasks();
       }
 
