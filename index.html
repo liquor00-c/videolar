@@ -5,6 +5,7 @@
 <title>Görev Listesi</title>
 <style>
 body, html {margin:0; padding:0; font-family:Arial,sans-serif; background:#f4f4f4;}
+#backButton {position:fixed; top:10px; left:10px; padding:5px 10px; background:#2575fc; color:white; border:none; border-radius:5px; cursor:pointer; display:none;}
 #userSelect {display:flex; justify-content:center; gap:50px; margin-top:50px;}
 .userCard {width:150px; height:150px; display:flex; justify-content:center; align-items:center; background:linear-gradient(135deg,#6a11cb,#2575fc); color:white; font-size:20px; font-weight:bold; border-radius:15px; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,0.3); text-align:center;}
 .userCard:hover {transform:translateY(-5px);}
@@ -16,12 +17,12 @@ button {padding:5px 10px; border-radius:5px; border:none; cursor:pointer;}
 
 .task {background:#f9f9f9; padding:15px; border-radius:8px; width:220px; text-transform:uppercase; position:relative;}
 .task h3 {margin:0; display:inline-block;}
-.task .edit-handle {position:absolute; right:30px; top:10px; font-size:18px; cursor:grab;}
+.task .edit-handle {position:absolute; right:50px; top:10px; font-size:18px; cursor:grab;}
 .task .delete-handle {position:absolute; right:10px; top:10px; font-size:18px; cursor:pointer;}
 .subtasks {margin-top:10px; display:flex; flex-direction:column; gap:5px;}
 .subtask {display:flex; justify-content:space-between; align-items:center; padding:5px; background:#e2e2e2; border-radius:5px;}
 .subtask span.tick {margin-left:5px; color:green; display:none;}
-.buttons button {margin-left:5px; padding:3px 8px; border-radius:5px;}
+.subtask button {margin-left:5px; padding:3px 5px; border-radius:5px;}
 .done {background:#4CAF50; color:white;}
 .fail {background:#e74c3c; color:white;}
 .add-sub {margin-top:5px;}
@@ -29,9 +30,11 @@ button {padding:5px 10px; border-radius:5px; border:none; cursor:pointer;}
 </head>
 <body>
 
+<button id="backButton" onclick="goBack()">Geri Git</button>
+
 <div id="userSelect">
   <div class="userCard" onclick="selectUser('Amiral')">Amiral</div>
-  <div class="userCard" onclick="selectUser('Ipattys')">İpattys</div>
+  <div class="userCard" onclick="selectUser('Ipattys')">Ipattys</div>
 </div>
 
 <h2 id="userTitle"></h2>
@@ -58,7 +61,16 @@ function selectUser(user) {
   document.getElementById('userSelect').style.display='none';
   document.getElementById('userTitle').innerText = user + "'ın Görevleri";
   document.getElementById('taskInputContainer').style.display='flex';
+  document.getElementById('backButton').style.display='inline-block';
   renderTasks();
+}
+
+function goBack(){
+  currentUser="";
+  document.getElementById('userSelect').style.display='flex';
+  document.getElementById('userTitle').innerText="";
+  document.getElementById('taskInputContainer').style.display='none';
+  document.getElementById('backButton').style.display='none';
 }
 
 function getCurrentTasks(){ return currentUser==='Amiral'?tasksAmiral:tasksIpattys; }
@@ -98,27 +110,31 @@ function renderTasks() {
     subtasksDiv.className="subtasks";
     subtasksDiv.style.display=task.show?"flex":"none";
 
-    task.subtasks.forEach((sub)=>{
+    task.subtasks.forEach((sub, subIndex)=>{
       const subDiv=document.createElement("div");
       subDiv.className="subtask";
       subDiv.innerHTML=`<span>${sub.text}</span><span class="tick">✔</span>
-        <div class="buttons">
+        <div>
           <button class="done">✅</button>
           <button class="fail">❌</button>
+          <button class="delete-sub">🗑</button>
         </div>`;
       const tickSpan=subDiv.querySelector(".tick");
+
       if(sub.status==="done") tickSpan.style.display="inline";
 
       subDiv.querySelector(".done").onclick=e=>{
-        e.stopPropagation();
-        sub.status = sub.status==="done"?"":"done";
-        saveTasks(); renderTasks();
-      };
+        e.stopPropagation(); sub.status=sub.status==="done"?"":"done"; saveTasks(); renderTasks();
+      }
       subDiv.querySelector(".fail").onclick=e=>{
+        e.stopPropagation(); sub.status=sub.status==="fail"?"":"fail"; saveTasks(); renderTasks();
+      }
+      subDiv.querySelector(".delete-sub").onclick=e=>{
         e.stopPropagation();
-        sub.status = sub.status==="fail"?"":"fail";
+        task.subtasks.splice(subIndex,1);
         saveTasks(); renderTasks();
-      };
+      }
+
       subtasksDiv.appendChild(subDiv);
     });
 
@@ -166,13 +182,13 @@ function renderTasks() {
       e.preventDefault();
       if(!dragEl || dragEl===draggable) return;
       wrapper.insertBefore(dragEl, draggable.nextSibling);
-      // Güncel sıralamayı kaydet
-      const newTasks = Array.from(wrapper.children).map(t=>{
-        const idx = Array.from(wrapper.children).indexOf(t);
-        return getCurrentTasks()[idx];
-      });
-      setCurrentTasks(getCurrentTasks()); // localStorage güncelle
+      // Sıralamayı kaydet
+      const newOrder = Array.from(wrapper.children).map(t=>t.querySelector('h3').innerText);
+      let tasksArr = getCurrentTasks();
+      tasksArr.sort((a,b)=> newOrder.indexOf(a.title)-newOrder.indexOf(b.title));
+      setCurrentTasks(tasksArr);
       saveTasks();
+      renderTasks();
     };
   });
 }
