@@ -121,7 +121,7 @@ function renderTasks() {
       subDiv.innerHTML=`<span>${sub.text}</span><span class="tick">✔</span>
         <div>
           <button class="done">✅</button>
-          <button class="delete-sub">🗑</button>
+          <button class="fail">❌</button>
         </div>`;
       const tickSpan=subDiv.querySelector(".tick");
       if(sub.status==="done") tickSpan.style.display="inline";
@@ -131,11 +131,6 @@ function renderTasks() {
       }
       subDiv.querySelector(".fail").onclick=e=>{
         e.stopPropagation(); sub.status=sub.status==="fail"?"":"fail"; saveTasks(); renderTasks();
-      }
-      subDiv.querySelector(".delete-sub").onclick=e=>{
-        e.stopPropagation();
-        task.subtasks.splice(subIndex,1);
-        saveTasks(); renderTasks();
       }
 
       subtasksDiv.appendChild(subDiv);
@@ -183,4 +178,3 @@ function addTask() {
 
 </body>
 </html>
-
