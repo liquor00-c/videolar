@@ -5,33 +5,11 @@
 <title>Görev Listesi</title>
 <style>
 body, html {
-  margin: 0;
-  padding: 0;
-  font-family: Arial, sans-serif;
-  background: #f4f4f4;
+  margin:0; padding:0; font-family:Arial,sans-serif; background:#f4f4f4;
 }
-#userSelect {
-  display: flex;
-  justify-content: center;
-  gap: 50px;
-  margin-top: 50px;
-}
-.userCard {
-  width: 150px;
-  height: 150px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: linear-gradient(135deg, #6a11cb, #2575fc);
-  color: white;
-  font-size: 20px;
-  font-weight: bold;
-  border-radius: 15px;
-  cursor: pointer;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-  text-align: center;
-}
-.userCard:hover { transform: translateY(-5px); }
+#userSelect { display:flex; justify-content:center; gap:50px; margin-top:50px; }
+.userCard { width:150px; height:150px; display:flex; justify-content:center; align-items:center; background:linear-gradient(135deg,#6a11cb,#2575fc); color:white; font-size:20px; font-weight:bold; border-radius:15px; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,0.3); text-align:center; }
+.userCard:hover { transform:translateY(-5px); }
 #userTitle { text-align:center; font-size:28px; margin:20px 0 10px 0; }
 #taskInputContainer { display:flex; justify-content:center; margin-bottom:20px; gap:10px; }
 #taskInput { padding:5px; width:200px; border-radius:5px; border:1px solid #ccc; }
@@ -39,15 +17,12 @@ button { padding:5px 10px; border-radius:5px; border:none; cursor:pointer; }
 #tasksWrapper { display:flex; flex-wrap:wrap; gap:15px; justify-content:center; }
 
 .task {
-  background:#f9f9f9;
-  padding:15px;
-  border-radius:8px;
-  width:200px;
-  text-transform:uppercase;
-  position:relative;
-  cursor:pointer;
+  background:#f9f9f9; padding:15px; border-radius:8px; width:200px; text-transform:uppercase; position:relative;
 }
 .task h3 { margin:0; display:inline-block; }
+.task .task-check { position:absolute; right:50px; top:10px; font-size:18px; color:green; display:none; }
+.task .edit-handle { position:absolute; right:30px; top:10px; font-size:18px; cursor:grab; }
+.task .delete-handle { position:absolute; right:10px; top:10px; font-size:18px; cursor:pointer; }
 .subtasks { margin-top:10px; display:flex; flex-direction:column; gap:5px; }
 .subtask { display:flex; justify-content:space-between; align-items:center; padding:5px; background:#e2e2e2; border-radius:5px; }
 .subtask .doneTick { margin-left:5px; color:green; display:none; }
@@ -85,94 +60,92 @@ function saveTasks() {
 
 function selectUser(user) {
   currentUser = user;
-  document.getElementById('userSelect').style.display = 'none';
+  document.getElementById('userSelect').style.display='none';
   document.getElementById('userTitle').innerText = user + "'ın Görevleri";
-  document.getElementById('taskInputContainer').style.display = 'flex';
+  document.getElementById('taskInputContainer').style.display='flex';
   renderTasks();
 }
 
-function getCurrentTasks() {
-  return currentUser === 'Amiral' ? tasksAmiral : tasksIpattys;
-}
-
-function setCurrentTasks(newTasks) {
-  if(currentUser === 'Amiral') tasksAmiral = newTasks;
-  else tasksIpattys = newTasks;
-}
+function getCurrentTasks(){ return currentUser==='Amiral'?tasksAmiral:tasksIpattys; }
+function setCurrentTasks(newTasks){ if(currentUser==='Amiral') tasksAmiral=newTasks; else tasksIpattys=newTasks; }
 
 function renderTasks() {
   const wrapper = document.getElementById("tasksWrapper");
   wrapper.innerHTML = "";
   let tasks = getCurrentTasks();
 
-  tasks.forEach((task, index) => {
-    const taskDiv = document.createElement("div");
-    taskDiv.className = "task";
-    taskDiv.dataset.index = index;
+  tasks.forEach((task,index)=>{
+    const taskDiv=document.createElement("div");
+    taskDiv.className="task";
+    taskDiv.dataset.index=index;
 
-    const title = document.createElement("h3");
-    title.innerText = task.title;
+    const title=document.createElement("h3");
+    title.innerText=task.title;
     taskDiv.appendChild(title);
 
-    const subtasksDiv = document.createElement("div");
-    subtasksDiv.className = "subtasks";
-    subtasksDiv.style.display = task.show ? "flex" : "none";
+    const checkSpan=document.createElement("span");
+    checkSpan.className="task-check";
+    taskDiv.appendChild(checkSpan);
 
-    task.subtasks.forEach((sub, subIndex) => {
-      const subDiv = document.createElement("div");
-      subDiv.className = "subtask";
-      subDiv.innerHTML = `<span>${sub.text}</span>
+    const editHandle=document.createElement("span");
+    editHandle.className="edit-handle";
+    editHandle.innerHTML="✏️";
+    taskDiv.appendChild(editHandle);
+
+    const deleteHandle=document.createElement("span");
+    deleteHandle.className="delete-handle";
+    deleteHandle.innerHTML="🗑";
+    deleteHandle.onclick=e=>{
+      e.stopPropagation();
+      tasks.splice(index,1);
+      setCurrentTasks(tasks);
+      saveTasks();
+      renderTasks();
+    }
+    taskDiv.appendChild(deleteHandle);
+
+    const subtasksDiv=document.createElement("div");
+    subtasksDiv.className="subtasks";
+    subtasksDiv.style.display=task.show?"flex":"none";
+
+    task.subtasks.forEach(sub=>{
+      const subDiv=document.createElement("div");
+      subDiv.className="subtask";
+      subDiv.innerHTML=`<span>${sub.text}</span>
         <div class="buttons">
           <button class="done">✅</button>
           <span class="doneTick">✔</span>
           <button class="fail">❌</button>
         </div>`;
-      const tickSpan = subDiv.querySelector(".doneTick");
+      const tickSpan=subDiv.querySelector(".doneTick");
+      if(sub.status==="done") tickSpan.style.display="inline";
 
-      if(sub.status === "done") tickSpan.style.display = "inline";
-
-      subDiv.querySelector(".done").onclick = e=>{
-        e.stopPropagation();
-        sub.status = sub.status==="done"?"":"done";
-        saveTasks();
-        renderTasks();
-      }
-      subDiv.querySelector(".fail").onclick = e=>{
-        e.stopPropagation();
-        sub.status = sub.status==="fail"?"":"fail";
-        saveTasks();
-        renderTasks();
-      }
+      subDiv.querySelector(".done").onclick=e=>{e.stopPropagation(); sub.status=sub.status==="done"?"":"done"; saveTasks(); renderTasks();}
+      subDiv.querySelector(".fail").onclick=e=>{e.stopPropagation(); sub.status=sub.status==="fail"?"":"fail"; saveTasks(); renderTasks();}
 
       subtasksDiv.appendChild(subDiv);
     });
 
-    const subInput = document.createElement("input");
-    subInput.type = "text";
-    subInput.placeholder = "Alt görev ekle...";
-    subInput.className = "add-sub";
-    subInput.onclick = e=>e.stopPropagation();
-
-    const subBtn = document.createElement("button");
-    subBtn.innerText = "Ekle";
-    subBtn.onclick = e=>{
+    const subInput=document.createElement("input");
+    subInput.type="text";
+    subInput.placeholder="Alt görev ekle...";
+    subInput.className="add-sub";
+    subInput.onclick=e=>e.stopPropagation();
+    const subBtn=document.createElement("button");
+    subBtn.innerText="Ekle";
+    subBtn.onclick=e=>{
       e.stopPropagation();
       if(!subInput.value) return;
       task.subtasks.push({text:subInput.value,status:""});
-      saveTasks();
-      renderTasks();
-      subInput.value="";
       task.show=true;
+      saveTasks(); renderTasks();
+      subInput.value="";
     }
-
     subtasksDiv.appendChild(subInput);
     subtasksDiv.appendChild(subBtn);
     taskDiv.appendChild(subtasksDiv);
 
-    taskDiv.onclick = ()=>{
-      task.show = !task.show;
-      renderTasks();
-    }
+    taskDiv.onclick=()=>{task.show=!task.show; renderTasks();}
 
     wrapper.appendChild(taskDiv);
   });
@@ -180,36 +153,33 @@ function renderTasks() {
   setCurrentTasks(tasks);
   saveTasks();
 
-  // DOM olarak gerçek yer değiştirme
-  const draggables = document.querySelectorAll('.task');
-  let dragSrcEl = null;
+  // Gerçek DOM olarak sürükle ve bırak
+  const draggables=document.querySelectorAll('.task');
+  let dragSrcIndex=null;
 
   draggables.forEach(draggable=>{
-    draggable.draggable = true;
-    draggable.ondragstart = e=>{
-      dragSrcEl = e.currentTarget;
-    }
-    draggable.ondragover = e=>{ e.preventDefault(); }
-    draggable.ondrop = e=>{
+    draggable.draggable=true;
+
+    draggable.ondragstart=e=>{ dragSrcIndex=parseInt(draggable.dataset.index); }
+    draggable.ondragover=e=>{ e.preventDefault(); }
+    draggable.ondrop=e=>{
       e.preventDefault();
-      if(dragSrcEl && dragSrcEl!==e.currentTarget){
-        const tasks = getCurrentTasks();
-        const fromIndex = parseInt(dragSrcEl.dataset.index);
-        const toIndex = parseInt(e.currentTarget.dataset.index);
-        const moved = tasks.splice(fromIndex,1)[0];
-        tasks.splice(toIndex,0,moved);
-        setCurrentTasks(tasks);
-        saveTasks();
-        renderTasks();
-      }
+      const targetIndex=parseInt(draggable.dataset.index);
+      if(dragSrcIndex===targetIndex) return;
+      let tasks=getCurrentTasks();
+      const moved=tasks.splice(dragSrcIndex,1)[0];
+      tasks.splice(targetIndex,0,moved);
+      setCurrentTasks(tasks);
+      saveTasks();
+      renderTasks();
     }
   });
 }
 
 function addTask() {
-  const taskText = document.getElementById("taskInput").value;
+  const taskText=document.getElementById("taskInput").value;
   if(!taskText) return;
-  let tasks = getCurrentTasks();
+  let tasks=getCurrentTasks();
   tasks.push({title:taskText,subtasks:[],show:true});
   setCurrentTasks(tasks);
   saveTasks();
