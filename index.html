@@ -1,5 +1,7 @@
 <!DOCTYPE html>
 <html lang="tr">
+  let tasksAmiral = JSON.parse(localStorage.getItem('tasksAmiral')) || [];
+let tasksIpattys = JSON.parse(localStorage.getItem('tasksIpattys')) || [];
 <head>
   <meta charset="UTF-8">
   <title>Görev Listesi</title>
@@ -112,4 +114,5 @@ renderTasks();
 </script>
 
 </body>
+
 </html>
