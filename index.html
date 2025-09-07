@@ -4,80 +4,57 @@
 <meta charset="UTF-8">
 <title>Görev Listesi</title>
 <style>
-  body, html {
-    margin: 0;
-    padding: 0;
-    font-family: Arial, sans-serif;
-    background: #f4f4f4;
-  }
-  #userSelect {
-    display: flex;
-    justify-content: center;
-    gap: 50px;
-    margin-top: 50px;
-  }
-  .userCard {
-    width: 150px;
-    height: 150px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: linear-gradient(135deg, #6a11cb, #2575fc);
-    color: white;
-    font-size: 20px;
-    font-weight: bold;
-    border-radius: 15px;
-    cursor: pointer;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    transition: transform 0.3s, box-shadow 0.3s;
-    text-align: center;
-  }
-  .userCard:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.4);
-  }
+body, html {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f4f4;
+}
+#userSelect {
+  display: flex;
+  justify-content: center;
+  gap: 50px;
+  margin-top: 50px;
+}
+.userCard {
+  width: 150px;
+  height: 150px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #6a11cb, #2575fc);
+  color: white;
+  font-size: 20px;
+  font-weight: bold;
+  border-radius: 15px;
+  cursor: pointer;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  text-align: center;
+}
+.userCard:hover { transform: translateY(-5px); }
+#userTitle { text-align:center; font-size:28px; margin:20px 0 10px 0; }
+#taskInputContainer { display:flex; justify-content:center; margin-bottom:20px; gap:10px; }
+#taskInput { padding:5px; width:200px; border-radius:5px; border:1px solid #ccc; }
+button { padding:5px 10px; border-radius:5px; border:none; cursor:pointer; }
+#tasksWrapper { display:flex; flex-wrap:wrap; gap:15px; justify-content:center; }
 
-  #userTitle {
-    text-align: center;
-    font-size: 28px;
-    margin: 20px 0 10px 0;
-  }
-
-  #taskInputContainer {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 20px;
-    gap: 10px;
-  }
-  #taskInput { padding: 5px; width: 200px; border-radius: 5px; border: 1px solid #ccc; }
-  button { padding: 5px 10px; border-radius: 5px; border: none; cursor: pointer; }
-
-  #tasksWrapper {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    justify-content: center;
-  }
-
-  .task {
-    background: #f9f9f9;
-    padding: 15px;
-    border-radius: 8px;
-    width: 200px;
-    text-transform: uppercase;
-    position: relative;
-    cursor: grab;
-  }
-  .task h3 { margin: 0; display: inline-block; }
-  .task .task-check { position: absolute; right: 30px; top: 10px; font-size: 18px; color: green; display: none; }
-  .task .edit-handle { position: absolute; right: 10px; top: 10px; font-size: 18px; cursor: grab; }
-
-  .subtasks { margin-top: 10px; display: flex; flex-direction: column; gap: 5px; }
-  .subtask { display: flex; justify-content: space-between; align-items: center; padding: 5px; background: #e2e2e2; border-radius: 5px; }
-  .buttons button { margin-left: 5px; padding: 3px 8px; border-radius: 5px; }
-  .done { background: #4CAF50; color: white; }
-  .fail { background: #e74c3c; color: white; }
-  .add-sub { margin-top: 5px; }
+.task {
+  background:#f9f9f9;
+  padding:15px;
+  border-radius:8px;
+  width:200px;
+  text-transform:uppercase;
+  position:relative;
+  cursor:pointer;
+}
+.task h3 { margin:0; display:inline-block; }
+.subtasks { margin-top:10px; display:flex; flex-direction:column; gap:5px; }
+.subtask { display:flex; justify-content:space-between; align-items:center; padding:5px; background:#e2e2e2; border-radius:5px; }
+.subtask .doneTick { margin-left:5px; color:green; display:none; }
+.buttons button { margin-left:5px; padding:3px 8px; border-radius:5px; }
+.done { background:#4CAF50; color:white; }
+.fail { background:#e74c3c; color:white; }
+.add-sub { margin-top:5px; }
 </style>
 </head>
 <body>
@@ -132,42 +109,40 @@ function renderTasks() {
     const taskDiv = document.createElement("div");
     taskDiv.className = "task";
     taskDiv.dataset.index = index;
-    taskDiv.draggable = true;
 
     const title = document.createElement("h3");
     title.innerText = task.title;
     taskDiv.appendChild(title);
 
-    const checkSpan = document.createElement("span");
-    checkSpan.className = "task-check";
-    if(task.subtasks.some(s => s.status === "done")) {
-      checkSpan.style.display = "inline";
-      checkSpan.innerText = "✔";
-    }
-    taskDiv.appendChild(checkSpan);
-
-    const editHandle = document.createElement("span");
-    editHandle.className = "edit-handle";
-    editHandle.innerHTML = "✏️";
-    taskDiv.appendChild(editHandle);
-
     const subtasksDiv = document.createElement("div");
     subtasksDiv.className = "subtasks";
     subtasksDiv.style.display = task.show ? "flex" : "none";
 
-    task.subtasks.forEach(sub => {
+    task.subtasks.forEach((sub, subIndex) => {
       const subDiv = document.createElement("div");
       subDiv.className = "subtask";
       subDiv.innerHTML = `<span>${sub.text}</span>
         <div class="buttons">
           <button class="done">✅</button>
+          <span class="doneTick">✔</span>
           <button class="fail">❌</button>
         </div>`;
-      if(sub.status==="done") subDiv.querySelector(".done").style.opacity=0.6;
-      if(sub.status==="fail") subDiv.querySelector(".fail").style.opacity=0.6;
+      const tickSpan = subDiv.querySelector(".doneTick");
 
-      subDiv.querySelector(".done").onclick = e => { e.stopPropagation(); sub.status = sub.status==="done"?"":"done"; saveTasks(); renderTasks(); };
-      subDiv.querySelector(".fail").onclick = e => { e.stopPropagation(); sub.status = sub.status==="fail"?"":"fail"; saveTasks(); renderTasks(); };
+      if(sub.status === "done") tickSpan.style.display = "inline";
+
+      subDiv.querySelector(".done").onclick = e=>{
+        e.stopPropagation();
+        sub.status = sub.status==="done"?"":"done";
+        saveTasks();
+        renderTasks();
+      }
+      subDiv.querySelector(".fail").onclick = e=>{
+        e.stopPropagation();
+        sub.status = sub.status==="fail"?"":"fail";
+        saveTasks();
+        renderTasks();
+      }
 
       subtasksDiv.appendChild(subDiv);
     });
@@ -176,18 +151,28 @@ function renderTasks() {
     subInput.type = "text";
     subInput.placeholder = "Alt görev ekle...";
     subInput.className = "add-sub";
-    subInput.onclick = e => e.stopPropagation();
+    subInput.onclick = e=>e.stopPropagation();
 
     const subBtn = document.createElement("button");
     subBtn.innerText = "Ekle";
-    subBtn.onclick = e => { e.stopPropagation(); if(!subInput.value) return; task.subtasks.push({text: subInput.value,status:""}); saveTasks(); renderTasks(); subInput.value=""; task.show=true; };
+    subBtn.onclick = e=>{
+      e.stopPropagation();
+      if(!subInput.value) return;
+      task.subtasks.push({text:subInput.value,status:""});
+      saveTasks();
+      renderTasks();
+      subInput.value="";
+      task.show=true;
+    }
 
     subtasksDiv.appendChild(subInput);
     subtasksDiv.appendChild(subBtn);
-
     taskDiv.appendChild(subtasksDiv);
 
-    taskDiv.onclick = () => { task.show=!task.show; renderTasks(); };
+    taskDiv.onclick = ()=>{
+      task.show = !task.show;
+      renderTasks();
+    }
 
     wrapper.appendChild(taskDiv);
   });
@@ -195,27 +180,29 @@ function renderTasks() {
   setCurrentTasks(tasks);
   saveTasks();
 
-  // Drag & Drop
+  // DOM olarak gerçek yer değiştirme
   const draggables = document.querySelectorAll('.task');
-  let dragSrcIndex = null;
+  let dragSrcEl = null;
 
   draggables.forEach(draggable=>{
-    draggable.addEventListener('dragstart', e=>{
-      dragSrcIndex = draggable.dataset.index;
-      e.dataTransfer.effectAllowed = 'move';
-    });
-    draggable.addEventListener('dragover', e=>{ e.preventDefault(); });
-    draggable.addEventListener('drop', e=>{
+    draggable.draggable = true;
+    draggable.ondragstart = e=>{
+      dragSrcEl = e.currentTarget;
+    }
+    draggable.ondragover = e=>{ e.preventDefault(); }
+    draggable.ondrop = e=>{
       e.preventDefault();
-      const targetIndex = e.currentTarget.dataset.index;
-      if(dragSrcIndex==targetIndex) return;
-      let tasks = getCurrentTasks();
-      const moved = tasks.splice(dragSrcIndex,1)[0];
-      tasks.splice(targetIndex,0,moved);
-      setCurrentTasks(tasks);
-      saveTasks();
-      renderTasks();
-    });
+      if(dragSrcEl && dragSrcEl!==e.currentTarget){
+        const tasks = getCurrentTasks();
+        const fromIndex = parseInt(dragSrcEl.dataset.index);
+        const toIndex = parseInt(e.currentTarget.dataset.index);
+        const moved = tasks.splice(fromIndex,1)[0];
+        tasks.splice(toIndex,0,moved);
+        setCurrentTasks(tasks);
+        saveTasks();
+        renderTasks();
+      }
+    }
   });
 }
 
