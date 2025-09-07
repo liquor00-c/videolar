@@ -1,7 +1,5 @@
 <!DOCTYPE html>
 <html lang="tr">
-  let tasksAmiral = JSON.parse(localStorage.getItem('tasksAmiral')) || [];
-let tasksIpattys = JSON.parse(localStorage.getItem('tasksIpattys')) || [];
 <head>
   <meta charset="UTF-8">
   <title>Görev Listesi</title>
@@ -21,7 +19,11 @@ let tasksIpattys = JSON.parse(localStorage.getItem('tasksIpattys')) || [];
   </style>
 </head>
 <body>
-
+<div id="userSelect">
+  <h2>Kullanıcı Seç</h2>
+  <button onclick="selectUser('Amiral')">Amiral</button>
+  <button onclick="selectUser('Ipattys')">İpattys</button>
+</div>
 <h2>Görev Ekle</h2>
 <input type="text" id="taskInput" placeholder="Görev başlığı">
 <button onclick="addTask()">Ekle</button>
@@ -116,3 +118,4 @@ renderTasks();
 </body>
 
 </html>
+
