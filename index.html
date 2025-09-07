@@ -64,7 +64,7 @@
       padding: 15px;
       border-radius: 8px;
       width: 200px;
-      cursor: pointer;
+      cursor: grab;
       text-transform: uppercase;
       position: relative;
     }
@@ -76,11 +76,19 @@
 
     .task .task-check {
       position: absolute;
-      right: 10px;
+      right: 30px;
       top: 10px;
       font-size: 18px;
       color: green;
       display: none;
+    }
+
+    .task .edit-handle {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      font-size: 18px;
+      cursor: grab;
     }
 
     .subtasks {
@@ -161,9 +169,11 @@ function renderTasks() {
   wrapper.innerHTML = "";
   let tasks = getCurrentTasks();
 
-  tasks.forEach((task) => {
+  tasks.forEach((task, index) => {
     const taskDiv = document.createElement("div");
     taskDiv.className = "task";
+    taskDiv.setAttribute("draggable", "true");
+    taskDiv.dataset.index = index;
 
     const title = document.createElement("h3");
     title.innerText = task.title;
@@ -177,6 +187,12 @@ function renderTasks() {
       checkSpan.innerText = "✔";
     }
     taskDiv.appendChild(checkSpan);
+
+    // Edit handle (sürükleme için)
+    const editHandle = document.createElement("span");
+    editHandle.className = "edit-handle";
+    editHandle.innerHTML = "✏️";
+    taskDiv.appendChild(editHandle);
 
     const subtasksDiv = document.createElement("div");
     subtasksDiv.className = "subtasks";
@@ -216,6 +232,7 @@ function renderTasks() {
     subInput.type = "text";
     subInput.placeholder = "Alt görev ekle...";
     subInput.className = "add-sub";
+    subInput.onclick = e => e.stopPropagation();
 
     const subBtn = document.createElement("button");
     subBtn.innerText = "Ekle";
@@ -231,7 +248,6 @@ function renderTasks() {
 
     subtasksDiv.appendChild(subInput);
     subtasksDiv.appendChild(subBtn);
-
     taskDiv.appendChild(subtasksDiv);
 
     // Ana göreve tıklayınca alt görevleri aç/kapa
@@ -245,6 +261,37 @@ function renderTasks() {
 
   setCurrentTasks(tasks);
   saveTasks();
+
+  // Drag & drop
+  const draggables = document.querySelectorAll('.task');
+  let dragSrcEl = null;
+
+  draggables.forEach(draggable => {
+    draggable.addEventListener('dragstart', (e) => {
+      dragSrcEl = e.currentTarget;
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/html', dragSrcEl.innerHTML);
+    });
+
+    draggable.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+    });
+
+    draggable.addEventListener('drop', (e) => {
+      e.stopPropagation();
+      if(dragSrcEl !== e.currentTarget){
+        const tasks = getCurrentTasks();
+        const fromIndex = dragSrcEl.dataset.index;
+        const toIndex = e.currentTarget.dataset.index;
+        const movedItem = tasks.splice(fromIndex, 1)[0];
+        tasks.splice(toIndex, 0, movedItem);
+        setCurrentTasks(tasks);
+        saveTasks();
+        renderTasks();
+      }
+    });
+  });
 }
 
 function addTask() {
